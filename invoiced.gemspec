@@ -17,11 +17,13 @@ Gem::Specification.new do |s|
   s.add_dependency('rest-client', '~> 1.8.0')
   s.add_dependency('json', '~> 1.8.3')
   s.add_dependency('activesupport', '~> 4.2.3')
+  s.add_dependency('redis', '~>3.2')
 
   s.add_development_dependency('mocha', '~> 0.13.2')
   s.add_development_dependency('shoulda', '~> 3.4.0')
   s.add_development_dependency('test-unit')
   s.add_development_dependency('rake')
+  s.add_development_dependency('pry')
 
   s.files = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- test/*`.split("\n")
