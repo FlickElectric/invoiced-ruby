@@ -114,6 +114,7 @@ module Invoiced
           lock.lock
           result = api_request(method, endpoint, params)
           lock.unlock
+          result
         rescue Redis::Lock::AcquireLockTimeOut
           raise UnableToAcquireLock, "Acquire Lock timed out: #{lock.inspect}"
         ensure
