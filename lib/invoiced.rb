@@ -2,7 +2,7 @@ require 'rest-client'
 require 'json'
 require 'base64'
 require 'active_support/inflector'
-require 'redis-lock'
+require 'pmckee11-redis-lock/redis-lock'
 
 require 'invoiced/version'
 require 'invoiced/util'

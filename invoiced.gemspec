@@ -18,6 +18,7 @@ Gem::Specification.new do |s|
   s.add_dependency('json', '~> 1.8.3')
   s.add_dependency('activesupport', '~> 4.2.3')
   s.add_dependency('redis', '~>3.2')
+  s.add_dependency('pmckee11-redis-lock')
 
   s.add_development_dependency('mocha', '~> 0.13.2')
   s.add_development_dependency('shoulda', '~> 3.4.0')
