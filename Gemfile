@@ -1,4 +1,6 @@
 source "https://rubygems.org"
+gem 'pmckee11-redis-lock', require: 'redis-lock'
+
 gemspec
 
 gem 'json', '~> 1.8.3'
