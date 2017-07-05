@@ -112,7 +112,13 @@ module Invoiced
         def locked_api_request(method, endpoint, params)
           lock = redis_lock
           lock.lock
-            result = api_request(method, endpoint, params)
+            begin
+              result = api_request(method, endpoint, params)
+            rescue => e
+                #if the api_request fails we still want the lock to be released
+                lock.unlock
+                raise e
+            end
           lock.unlock
 
           result
