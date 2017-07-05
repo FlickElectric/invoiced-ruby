@@ -2,6 +2,7 @@ require 'rest-client'
 require 'json'
 require 'base64'
 require 'active_support/inflector'
+require 'redis-lock'
 
 require 'invoiced/version'
 require 'invoiced/util'
@@ -37,14 +38,17 @@ module Invoiced
     class Client
         ApiBase = 'https://api.invoiced.com'
         ApiBaseSandbox = 'https://api.sandbox.invoiced.com'
+        ConnectionLimit = 20
+        class UnableToAcquireLock < StandardError ; end
 
         attr_reader :api_key, :api_url, :sandbox
         attr_reader :CatalogItem, :CreditNote, :Customer, :Estimate, :Event, :File, :Invoice, :Plan, :Subscription, :Transaction
 
-        def initialize(api_key, sandbox=false)
+        def initialize(api_key, sandbox=false, redis: nil)
           @api_key = api_key
           @sandbox = sandbox
           @api_url = sandbox ? ApiBaseSandbox : ApiBase
+          @redis = redis
 
           # Object endpoints
           @CatalogItem = Invoiced::CatalogItem.new(self)
@@ -59,7 +63,17 @@ module Invoiced
           @Transaction = Invoiced::Transaction.new(self)
         end
 
-        def request(method, endpoint, params={})
+        def request(method, endpoint, params = {})
+          if @redis
+            locked_api_request(method, endpoint, params)
+          else
+            api_request(method, endpoint, params)
+          end
+        end
+
+        private
+
+        def api_request(method, endpoint, params)
             url = @api_url + endpoint
 
             case method.to_s.downcase.to_sym
@@ -95,7 +109,25 @@ module Invoiced
             parse(response)
         end
 
-        private
+        def locked_api_request(method, endpoint, params)
+          lock = redis_lock
+          lock.lock
+            api_request(method, endpoint, params)
+          lock.unlock
+        rescue Redis::Lock::AcquireLockTimeOut
+          raise UnableToAcquireLock, "Acquire Lock timed out: #{lock.inspect}"
+        end
+
+        def redis_lock
+          return unless @redis
+
+          Redis::Lock.new(
+            @redis,
+            "invoiced_lock_#{rand(1..ConnectionLimit)}",
+            auto_release_time: 7,
+            base_sleep: 10
+          )
+        end
 
         def parse(response)
             unless response.code == 204
