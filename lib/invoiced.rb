@@ -122,8 +122,6 @@ module Invoiced
         end
 
         def redis_lock
-          return unless @redis
-
           Redis::Lock.new(
             @redis,
             "invoiced_lock_#{rand(1..ConnectionLimit)}",
